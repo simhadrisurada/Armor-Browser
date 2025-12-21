@@ -1,0 +1,165 @@
+import tkinter as tk
+from PIL import Image, ImageTk
+from tkinter import ttk
+import webview
+
+database = {
+    "instagram.com": "https://instagram.com", "instagram.com_key": "/",
+    "mypage.io": "https://bm6c43jb-5000.inc1.devtunnels.ms/", "mypage.io_key": "hgeuyjegrfbjaeryfvajuyvajmdfjhvgsdu:902390403/login",
+    "googlecloud.com": "https://cloud.google.com", "googlecloud.com_key": "/",
+    "github.com": "https://github.com", "github.com_key": "/login",
+    "twitter.com": "https://twitter.com", "twitter.com_key": "/home",
+    "linkedin.com": "https://linkedin.com", "linkedin.com_key": "/feed",
+    "aws.amazon.com": "https://aws.amazon.com", "aws.amazon.com_key": "/console",
+    "facebook.com": "https://facebook.com", "facebook.com_key": "/home"
+}
+
+
+
+suggestions = ["1nstagram", "inst4gram", "in5tagram", "insta_gr4m", "insta.g_ram", "i.n.s.t.a.g", "insta_gram_", "_insta_gram", "instaG", "instag_ram123", "insta.guru", "my_insta", "insta.snap", "insta.vision", "insta_world", "insta.life", "insta_clicks", "insta_mania", "insta_love","apple", "banana", "orange", "grape", "watermelon", "kiwi","sca","abdgv","google.com", "facebook.com", "amazon.com", "apple.com", "microsoft.com", "netflix.com", "youtube.com", "twitter.com", "instagram.com", "linkedin.com", "github.com", "stackoverflow.com", "reddit.com", "twitch.tv", "pinterest.com", "snapchat.com", "whatsapp.com", "spotify.com", "dropbox.com", "airbnb.com"]
+
+
+backward = []
+forward = []
+
+root = tk.Tk()
+root.title("Armor Browse")
+root.geometry("1600x800")
+bck = Image.open("background.png")
+bck = bck.resize((2000, 2000))
+bck = ImageTk.PhotoImage(bck)
+place_bck = tk.Label(root,image=bck)
+place_bck.place(x=0,y=0)
+s = tk.Label(root, text="⌨️:", font=("Arial", 20))
+img = Image.open("chrome.png")
+img = img.resize((800, 300))
+photo = ImageTk.PhotoImage(img)
+place = tk.Label(root, image=photo)
+place.place(x=410, y=100)
+found = ttk.Progressbar(root, length=1600, mode="determinate")
+ukr = tk.Label(root, text="unknown request declined ❎", font=("Arial", 20),  bg="red")
+#ukr.place(relx = 0.6, rely = 0.06)
+kr = tk.Label(root, text="known request accepted ✅", font=("Arial", 20), bg="green")
+#kr.place(relx = 0.6, rely = 0.06) 
+profile = tk.Label(root, text="UID : 902390403\nG-mail : google@gmail.com\nRegion : India ", font=("Arial", 20), bg="white")
+
+
+def make() :
+    profile.place(relx = 0.75, rely = 0.8) 
+    close.place(relx = 0.95, rely = 0.75)
+def dmake() :
+    profile.place_forget()
+    close.place_forget()
+close = tk.Button(root, text="❎", font=("Arial", 14),command = dmake,bg = "red")
+
+#--------------------------->> loading bar <<-------------------------------------#
+style = ttk.Style()
+style.theme_use("default")      
+style.configure("red.Horizontal.TProgressbar",
+                troughcolor="white",
+                background="red")
+bar = ttk.Progressbar(root, length=1600, mode="determinate",
+                      style="red.Horizontal.TProgressbar")
+def switch_to_green():
+    style.configure("red.Horizontal.TProgressbar", background="green")
+    kr.place(relx = 0.4, rely = 0.06)
+def switch_to_red():
+    ukr.place(relx = 0.4, rely = 0.06)
+    style.configure("red.Horizontal.TProgressbar", background="red")
+
+def load():
+    bar.place(relx=0, rely=0)
+    i = 0
+    while(i < 101):
+        bar['value'] = i
+        root.update()
+        root.after(20)
+        i+=2
+    ukr.place_forget()
+    kr.place_forget()
+    bar.place_forget()
+#------------------------------------------------------------------------------------------------------#
+def search_in_the_database(text):
+    if text in database :
+        return True
+    else :
+        return False
+
+#----------------------------------->>>>>>>>> searching process <<<<<<--------------------------------##
+def start_webview():
+    url = entry.get()
+    #url  = "https://search.yahoo.com/search?d=" + url
+    backward.insert(0,url)
+    if len(backward) > 3 :
+        backward.pop()
+#--------------------------->>>>>>> search in the data base <<<<<<<<<<--------------------------###
+    if search_in_the_database(url):
+        switch_to_green()
+        load()
+        url = database[url]  + database[url + "_key"] 
+        #url = "https://search.yahoo.com/search?fr=mcafee&type=E210US885G0&p="+ url
+    else :
+        switch_to_red()
+        load()
+        return
+##>>>>>>-------------------------------------------------------------------------------<<<<<<<<##
+    webview.create_window('Browser', url)
+    webview.start()    
+    #entry.delete(0,tk.END)
+#>>--------------------------------------------------------------------------------------------<<##
+#------------------------------->>>> forward and backward <<<<<----------------------------------##
+entry = tk.Entry(root, font=("Arial", 20))  
+entry.place(relx=0.5, rely=0.6, anchor="center", width=400, height=40)
+def fwd() :
+    entry.delete(0, tk.END)
+    if len(forward) == 0 :
+        return
+    entry.insert(0,forward[0])
+    backward.insert(0,forward[0])
+    forward.pop(0)
+def bwd() :
+    entry.delete(0, tk.END)
+    if len(backward) == 0 :
+        return
+    forward.insert(0,backward[0])
+    if len(forward) > 3 :
+        forward.pop()
+    entry.insert(0,backward[0])
+    backward.pop(0)
+f = tk.Button(root, text = "➡️", command=fwd, font=("Arial", 14))
+b =  tk.Button(root, text = "⬅️", command=bwd,font=("Arial", 14))
+b.place(relx=0.05 - 0.01 - 0.034,rely=0.87 - 0.034 - 0.81)
+f.place(relx=0.10 - 0.01 - 0.034,rely=0.87 - 0.034 - 0.81)
+#-------------------------------------------------------------------------------------------------#
+#-------------------------->>search suggestions<<<<<----------------------------------------------#
+def update_suggestions(event):
+    typed = entry.get()
+    listbox.delete(0, tk.END) 
+    if typed == "":
+        return
+
+    for item in suggestions:
+        if typed.lower() in item.lower():  
+            listbox.insert(tk.END, item)
+def fill_entry(event):
+    try:
+        selected = listbox.get(listbox.curselection())
+        entry.delete(0, tk.END)
+        entry.insert(0, selected)
+        listbox.delete(0, tk.END)  # Optional: clear suggestions after selection
+    except tk.TclError:
+        pass  # If no selection, do nothing
+listbox = tk.Listbox(root,font=25,width=36, height=6) 
+listbox.place(relx=0.37, rely=0.63)
+entry.bind("<KeyRelease>", update_suggestions)
+listbox.bind("<<ListboxSelect>>", fill_entry)
+#>>--------------------------------------------------------------------------------------------<<<<#
+btn = tk.Button(root, text="🔎 SEARCH", font=("Arial", 14), command=start_webview)
+btn.place(relx=0.7, rely=0.6, anchor="center", width=150, height=40) #relx=0.5, rely=0.8
+
+menu = tk.Button(root, text=" details 🔽 ", font=("Arial", 14),command = make)
+menu.place(x=1400,y=40)
+s.place(relx=0.31, rely=0.58)
+#entry.insert(0,"sinhafo")
+
+root.mainloop()
