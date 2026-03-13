@@ -1,0 +1,37 @@
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import urllib.parse
+import hashlib
+import random
+import string
+def encode(data):
+    return hashlib.sha256(data.encode()).hexdigest()
+username = "simhadri"
+password = "password"
+class MyHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        parsed = urllib.parse.urlparse(self.path)
+        params = urllib.parse.parse_qs(parsed.query)
+        text = params.get("text", [""])[0]
+        text = encode(encode(username + password))
+        print("\n" + text)
+        # Generate a random salt on every request
+        salt = ''.join(random.choices(string.digits, k=5))
+        # SHA256 hash of text + salt
+        hash_value = encode(text + salt)
+        print(hash_value + "\n")
+        print(salt)
+        # Response in format: <hash> : <salt>
+        response = f"{hash_value}:{salt}"
+
+        self.send_response(200)
+        self.send_header("Content-type", "text/plain")
+        self.end_headers()
+        self.wfile.write(response.encode())
+
+    def log_message(self, format, *args):
+        print(f"[Request] {self.address_string()} - {format % args}")
+
+server = HTTPServer(("localhost", 8000), MyHandler)
+print("Server running at http://localhost:8000")
+print("Try: http://localhost:8000/?text=hello")
+server.serve_forever()

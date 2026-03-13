@@ -1,0 +1,76 @@
+from flask import Flask, send_file, jsonify
+from urllib.parse import unquote
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+import os
+
+app = Flask(__name__)
+
+SCREENSHOT_PATH = "scan_result.png"  # always overwritten — no extra space used
+
+
+def capture_screenshot(url: str) -> bool:
+    """
+    Opens the URL in a headless Chrome, waits for full load,
+    saves a screenshot to SCREENSHOT_PATH, then quits the driver.
+    Returns True on success, False on failure.
+    """
+    options = Options()
+    options.add_argument("--headless=new")          # no visible window
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--window-size=1280,800")
+    options.add_argument("--disable-gpu")
+
+    driver = None
+    try:
+        driver = webdriver.Chrome(options=options)
+        driver.get(url)
+        WebDriverWait(driver, 15).until(
+            lambda d: d.execute_script("return document.readyState") == "complete"
+        )
+        driver.save_screenshot(SCREENSHOT_PATH)     # overwrites every time
+        print(f"[SERVER] Screenshot saved for: {url}")
+        return True
+    except Exception as e:
+        print(f"[SERVER] Screenshot failed for {url}: {e}")
+        return False
+    finally:
+        if driver:
+            driver.quit()                           # always close — frees memory
+
+
+@app.route("/<path:encoded_url>", methods=["GET"])
+def scan(encoded_url):
+    target_url = unquote(encoded_url)
+
+    # Make sure the URL has a scheme
+    if not target_url.startswith(("http://", "https://")):
+        target_url = "https://" + target_url
+
+    print(f"[SERVER] Scan request for: {target_url}")
+
+    success = capture_screenshot(target_url)
+
+    if not success or not os.path.exists(SCREENSHOT_PATH):
+        return jsonify({"error": f"Could not capture screenshot for: {target_url}"}), 500
+
+    return send_file(
+        SCREENSHOT_PATH,
+        mimetype="image/png",
+        as_attachment=False
+    )
+
+
+@app.route("/", methods=["GET"])
+def index():
+    return jsonify({"status": "Intercept scan server running ✅"}), 200
+
+
+if __name__ == "__main__":
+    app.run(
+        host="0.0.0.0",
+        port=8888,
+        debug=False      # keep False — debug=True spawns a reloader that breaks Selenium
+    )
